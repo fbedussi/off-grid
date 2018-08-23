@@ -12,22 +12,24 @@ var message;
 var gameScene;
 var gameOverScene;
 
-var antennaRadius = 40;
-
-function getDirection() {
-    return g.randomFloat(-1, 1);
-}
 
 function makeDevices(numberOfDevices, deviceSize) {
     var devices = [];
 
     for (var i = 0; i < numberOfDevices; i++) {
         var color = `rgb(${g.randomInt(0, 255)}, ${g.randomInt(0, 255)}, ${g.randomInt(0, 255)})`;
-        var device = g.rectangle(deviceSize, deviceSize, color);
+        var device = g.rectangle(deviceSize, deviceSize, color, "black");
 
+        device.interactive = true;
         device.radius = g.randomInt(g.canvas.width / 4, (g.canvas.width - deviceSize) / 2);
         device.speed = g.randomFloat(0.001, 0.035);
         device.angle = 0;
+        device.press = function() {
+            this.lineWidth = 5;
+            setTimeout(() => {
+                this.lineWidth = 0;
+            }, 2000);
+        }
 
         devices.push(device);
 
@@ -38,10 +40,11 @@ function makeDevices(numberOfDevices, deviceSize) {
 }
 
 function setup() {
+    const antennaRadius = 40;
+
     //Set the canvas border and background color
     g.canvas.style.border = "1px black solid";
     g.backgroundColor = "white";
-
     //Create the `gameScene` group
     gameScene = g.group();
 
