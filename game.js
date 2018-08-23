@@ -12,31 +12,29 @@ var message;
 var gameScene;
 var gameOverScene;
 
+var antennaRadius = 40;
+
 function getDirection() {
     return g.randomFloat(-1, 1);
 }
 
-function makeObjects(color, speed, x, y) {
-    const numberOfObjects = 6;
-    
-    var objects = [];
+function makeDevices(numberOfDevices, deviceSize) {
+    var devices = [];
 
-    for (var i = 0; i < numberOfObjects; i++) {
+    for (var i = 0; i < numberOfDevices; i++) {
+        var color = `rgb(${g.randomInt(0, 255)}, ${g.randomInt(0, 255)}, ${g.randomInt(0, 255)})`;
+        var device = g.rectangle(deviceSize, deviceSize, color);
 
-        var object = g.rectangle(32, 32, color);
+        device.radius = g.randomInt(g.canvas.width / 4, (g.canvas.width - deviceSize) / 2);
+        device.speed = g.randomFloat(0.001, 0.035);
+        device.angle = 0;
 
-        object.x = x ? x : g.randomInt(0, g.canvas.width - object.height);
-        object.y = y ? y : g.randomInt(0, g.canvas.height - object.width);
+        devices.push(device);
 
-        object.vy = speed * getDirection();
-        object.vx = speed * getDirection();
-
-        objects.push(object);
-
-        gameScene.addChild(object);
+        gameScene.addChild(device);
     }
 
-    return objects;
+    return devices;
 }
 
 function setup() {
@@ -48,12 +46,11 @@ function setup() {
     gameScene = g.group();
 
     //The antenna
-    antenna = g.circle(48, 48, "green");
+    antenna = g.circle(antennaRadius, antennaRadius, "green");
     g.stage.putCenter(antenna, 0, 0);
     gameScene.addChild(antenna);
 
-    devices = makeObjects("red", 4);
-    signals = makeObjects("green", 2, g.canvas.width / 2, g.canvas.height / 2);
+    devices = makeDevices(6, 30);
 
     //Add some text for the game over message
     message = g.text("Game Over!", "64px Futura", "black", 20, 20);
@@ -71,41 +68,10 @@ function setup() {
 }
 
 function play() {
-    //Loop through all the sprites in the `devices` array
     devices.forEach(function (device) {
-
-        //Move the enemy
-        g.move(device);
-
-        //Check the device's screen boundaries
-        var deviceHitsEdges = g.contain(device, g.stage.localBounds);
-
-        //If the device hits the top or bottom of the stage, reverse
-        //its direction
-        if (deviceHitsEdges === "top" || deviceHitsEdges === "bottom") {
-            device.vy *= -1;
-        } else if (deviceHitsEdges === "left" || deviceHitsEdges === "right") {
-            device.vx *= -1;
-        }
-
-        //check antenna collision
-        if (g.hit(antenna, device)) {
-            device.vy *= -1;
-            device.vx *= -1;
-        }
-    });
-
-    signals.forEach(function (signal) {
-        g.move(signal);
-
-        var signalHitsEdges = g.contain(signal, g.stage.localBounds);
-
-        if (signalHitsEdges) {
-            signal.x = g.canvas.width / 2;
-            signal.y = g.canvas.height / 2;
-            signal.vx *= getDirection();
-            signal.vy *= getDirection();
-        }
+        device.x = (g.canvas.width - device.width) / 2 + Math.cos(device.angle) * device.radius;
+        device.y = (g.canvas.height - device.height) / 2 + Math.sin(device.angle) * device.radius;
+        device.angle += device.speed;
     });
 }
 
