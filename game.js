@@ -56,9 +56,9 @@ function makeSignals() {
         var signal = g.rectangle(signalSize, signalSize, signalColor);
 
         g.stage.putCenter(signal, 0, 0);
-
-        signal.vy = speed * getDirection();
-        signal.vx = speed * getDirection();
+        signal.speed = speed;
+        signal.vy = signal.speed * getDirection();
+        signal.vx = signal.speed * getDirection();
 
         signals.push(signal);
 
@@ -107,10 +107,10 @@ function play() {
         device.y = (g.canvas.height - device.height) / 2 + Math.sin(device.angle) * device.radius;
         device.angle += device.speed;
 
-        if (signals.some((signal) => g.hitTestRectangle(device, signal))) {
+        if (!device.lineWidth && signals.some((signal) => g.hitTestRectangle(device, signal))) {
             device.alpha = 0;
+            devices = devices.filter((d) => d != device);
         }
-        
     });
 
     signals.forEach(function (signal) {
@@ -118,10 +118,15 @@ function play() {
 
         if (g.contain(signal, g.stage.localBounds)) {
             g.stage.putCenter(signal, 0, 0);
-            // signal.vx *= getDirection();
-            // signal.vy *= getDirection();
+            signal.vx = signal.speed * getDirection();
+            signal.vy = signal.speed * getDirection();
         }
     });
+
+    if (!devices.length) {
+        g.state = end;
+        message.content = "Game over!";
+      }
 }
 
 function end() {
