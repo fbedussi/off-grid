@@ -106,6 +106,11 @@ function play() {
         device.x = (g.canvas.width - device.width) / 2 + Math.cos(device.angle) * device.radius;
         device.y = (g.canvas.height - device.height) / 2 + Math.sin(device.angle) * device.radius;
         device.angle += device.speed;
+
+        if (signals.some((signal) => g.hitTestRectangle(device, signal))) {
+            device.alpha = 0;
+        }
+        
     });
 
     signals.forEach(function (signal) {
