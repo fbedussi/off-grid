@@ -39,6 +39,35 @@ function makeDevices(numberOfDevices, deviceSize) {
     return devices;
 }
 
+
+function getDirection() {
+    return g.randomFloat(-3, 3);
+}
+
+function makeSignals() {
+    const numberOfSignals = 6;
+    const signalSize = 5;
+    const signalColor = "grey"
+    const speed = 1;
+
+    var signals = [];
+
+    for (var i = 0; i < numberOfSignals; i++) {
+        var signal = g.rectangle(signalSize, signalSize, signalColor);
+
+        g.stage.putCenter(signal, 0, 0);
+
+        signal.vy = speed * getDirection();
+        signal.vx = speed * getDirection();
+
+        signals.push(signal);
+
+        gameScene.addChild(signal);
+    }
+
+    return signals;
+}
+
 function setup() {
     const antennaRadius = 40;
 
@@ -54,6 +83,8 @@ function setup() {
     gameScene.addChild(antenna);
 
     devices = makeDevices(6, 30);
+    signals = makeSignals();
+
 
     //Add some text for the game over message
     message = g.text("Game Over!", "64px Futura", "black", 20, 20);
@@ -75,6 +106,16 @@ function play() {
         device.x = (g.canvas.width - device.width) / 2 + Math.cos(device.angle) * device.radius;
         device.y = (g.canvas.height - device.height) / 2 + Math.sin(device.angle) * device.radius;
         device.angle += device.speed;
+    });
+
+    signals.forEach(function (signal) {
+        g.move(signal);
+
+        if (g.contain(signal, g.stage.localBounds)) {
+            g.stage.putCenter(signal, 0, 0);
+            // signal.vx *= getDirection();
+            // signal.vy *= getDirection();
+        }
     });
 }
 
