@@ -5,6 +5,7 @@ const g = ga(
         'images/signal.png',
         'images/nokia-3210.png',
         'images/shield.png',
+        //'images/matrix.png',
     ]
 );
 
@@ -15,7 +16,6 @@ window.addEventListener("resize", function(event){
   g.scaleToWindow();
 });
 
-var antenna;
 var signals;
 var devices;
 var message;
@@ -84,22 +84,21 @@ function makeSignals(numberOfSignals, speed) {
 }
 
 function setup() {
-    const antennaRadius = 40;
-
-    //Set the canvas border and background color
     g.canvas.style.border = "1px black solid";
     g.backgroundColor = "white";
-    //Create the `gameScene` group
+
     gameScene = g.group();
 
+    // var background = g.sprite('images/matrix.png');
+    // gameScene.addChild(background);
+
     //The antenna
-    antenna = g.sprite("images/antenna.png");
+    var antenna = g.sprite('images/antenna.png');
     g.stage.putCenter(antenna, 0, 0);
     gameScene.addChild(antenna);
 
     devices = makeDevices(6);
-    signals = makeSignals(4, 2);
-
+    signals = makeSignals(5, 2);
 
     //Add some text for the game over message
     message = g.text("Game Over!", "64px Futura", "black", 20, 20);
