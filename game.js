@@ -4,6 +4,10 @@ const g = ga(
 
 //Start the Ga engine.
 g.start();
+g.scaleToWindow();
+window.addEventListener("resize", function(event){ 
+  g.scaleToWindow();
+});
 
 var antenna;
 var signals;
@@ -14,6 +18,7 @@ var gameOverScene;
 
 
 function makeDevices(numberOfDevices, deviceSize) {
+    const screenDuration = 3000;
     var devices = [];
 
     for (var i = 0; i < numberOfDevices; i++) {
@@ -22,13 +27,13 @@ function makeDevices(numberOfDevices, deviceSize) {
 
         device.interactive = true;
         device.radius = g.randomInt(g.canvas.width / 4, (g.canvas.width - deviceSize) / 2);
-        device.speed = g.randomFloat(0.001, 0.035);
+        device.speed = g.randomFloat(0.001, 0.05) / device.radius * 100;
         device.angle = 0;
         device.press = function() {
             this.lineWidth = 5;
             setTimeout(() => {
                 this.lineWidth = 0;
-            }, 2000);
+            }, screenDuration);
         }
 
         devices.push(device);
@@ -44,11 +49,10 @@ function getDirection() {
     return g.randomFloat(-3, 3);
 }
 
-function makeSignals() {
-    const numberOfSignals = 6;
+function makeSignals(numberOfSignals) {
     const signalSize = 5;
     const signalColor = "grey"
-    const speed = 1;
+    const speed = 1.5;
 
     var signals = [];
 
@@ -83,16 +87,25 @@ function setup() {
     gameScene.addChild(antenna);
 
     devices = makeDevices(6, 30);
-    signals = makeSignals();
+    signals = makeSignals(6);
 
 
     //Add some text for the game over message
     message = g.text("Game Over!", "64px Futura", "black", 20, 20);
     message.x = 120;
     message.y = g.canvas.height / 2 - 64;
+  
+    var replay = g.text("replay", "32px Futura", "black", 20, 20);
+    replay.x = 220;
+    replay.y = g.canvas.height / 2 + 64;
+    var replayButton = g.rectangle(100, 50, "green");
+    replayButton.x = replay.x - 10;
+    replayButton.y = replay.y - 10;
+    replayButton.interactive = true;
+    replayButton.release = restart;
 
     //Create a `gameOverScene` group and add the message sprite to it
-    gameOverScene = g.group(message);
+    gameOverScene = g.group(message, replayButton, replay);
 
     //Make the `gameOverScene` invisible for now
     gameOverScene.visible = false;
@@ -123,7 +136,7 @@ function play() {
         }
     });
 
-    if (!devices.length) {
+    if (devices.length < 2) {
         g.state = end;
         message.content = "Game over!";
       }
@@ -132,4 +145,14 @@ function play() {
 function end() {
     gameScene.visible = false;
     gameOverScene.visible = true;
+}
+
+function restart() {
+    gameScene.visible = true;
+    gameOverScene.visible = false;
+    g.remove(devices);
+    g.remove(signals);
+    g.remove(antenna);
+
+    setup();
 }
