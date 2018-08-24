@@ -1,5 +1,11 @@
 const g = ga(
-    512, 512, setup
+    512, 512, setup,
+    [
+        'images/antenna.png',
+        'images/signal.png',
+        'images/nokia-3210.png',
+        'images/shield.png',
+    ]
 );
 
 //Start the Ga engine.
@@ -17,22 +23,31 @@ var gameScene;
 var gameOverScene;
 
 
-function makeDevices(numberOfDevices, deviceSize) {
+function makeDevices(numberOfDevices) {
     const screenDuration = 3000;
     var devices = [];
 
     for (var i = 0; i < numberOfDevices; i++) {
-        var color = `rgb(${g.randomInt(0, 255)}, ${g.randomInt(0, 255)}, ${g.randomInt(0, 255)})`;
-        var device = g.rectangle(deviceSize, deviceSize, color, "black");
-
-        device.interactive = true;
-        device.radius = g.randomInt(g.canvas.width / 4, (g.canvas.width - deviceSize) / 2);
-        device.speed = g.randomFloat(0.001, 0.05) / device.radius * 100;
+        //var color = `rgb(${g.randomInt(0, 255)}, ${g.randomInt(0, 255)}, ${g.randomInt(0, 255)})`;
+        var deviceFrames = [
+            'images/nokia-3210.png', 
+            'images/shield.png'
+          ];
+        var device = g.sprite(deviceFrames);
+        device.states = {
+            normal: 0,
+            shielded: 1
+          };
+        device.radius = g.randomInt(g.canvas.width / 4, (g.canvas.width - device.width) / 2);
+        device.speed = g.randomFloat(0.001, 0.05) / device.radius * 70;
         device.angle = 0;
+        device.interactive = true;
         device.press = function() {
-            this.lineWidth = 5;
+            this.show(this.states.shielded);
+            this.shielded = true;
             setTimeout(() => {
-                this.lineWidth = 0;
+                this.show(this.states.normal);
+                this.shielded = false;
             }, screenDuration);
         }
 
@@ -46,17 +61,14 @@ function makeDevices(numberOfDevices, deviceSize) {
 
 
 function getDirection() {
-    return g.randomFloat(-3, 3);
+    return g.randomFloat(-1, 1);
 }
 
 function makeSignals(numberOfSignals, speed) {
-    const signalSize = 5;
-    const signalColor = "grey"
-
     var signals = [];
 
     for (var i = 0; i < numberOfSignals; i++) {
-        var signal = g.rectangle(signalSize, signalSize, signalColor);
+        var signal = g.sprite('images/signal.png');
 
         g.stage.putCenter(signal, 0, 0);
         signal.speed = speed;
@@ -81,12 +93,12 @@ function setup() {
     gameScene = g.group();
 
     //The antenna
-    antenna = g.circle(antennaRadius, antennaRadius, "green");
+    antenna = g.sprite("images/antenna.png");
     g.stage.putCenter(antenna, 0, 0);
     gameScene.addChild(antenna);
 
-    devices = makeDevices(6, 30);
-    signals = makeSignals(6, 1);
+    devices = makeDevices(6);
+    signals = makeSignals(4, 2);
 
 
     //Add some text for the game over message
@@ -119,7 +131,7 @@ function play() {
         device.y = (g.canvas.height - device.height) / 2 + Math.sin(device.angle) * device.radius;
         device.angle += device.speed;
 
-        if (!device.lineWidth && signals.some((signal) => g.hitTestRectangle(device, signal))) {
+        if (!device.shielded && signals.some((signal) => g.hitTestRectangle(device, signal))) {
             device.alpha = 0;
             devices = devices.filter((d) => d != device);
         }
