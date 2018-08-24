@@ -49,10 +49,9 @@ function getDirection() {
     return g.randomFloat(-3, 3);
 }
 
-function makeSignals(numberOfSignals) {
+function makeSignals(numberOfSignals, speed) {
     const signalSize = 5;
     const signalColor = "grey"
-    const speed = 1.5;
 
     var signals = [];
 
@@ -87,7 +86,7 @@ function setup() {
     gameScene.addChild(antenna);
 
     devices = makeDevices(6, 30);
-    signals = makeSignals(6);
+    signals = makeSignals(6, 1);
 
 
     //Add some text for the game over message
@@ -127,7 +126,8 @@ function play() {
     });
 
     signals.forEach(function (signal) {
-        g.move(signal);
+        signal.x += signal.vx;
+        signal.y += signal.vy;
 
         if (g.contain(signal, g.stage.localBounds)) {
             g.stage.putCenter(signal, 0, 0);
