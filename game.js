@@ -1,4 +1,14 @@
-const g = ga(
+var antenna;
+var signals = [];
+var devices = [];
+var message;
+var gameScene;
+var gameOverScene;
+var score = 0;
+var scoreDisplay;
+var totalScore;
+
+var g = ga(
     512, 512, setup,
     [
         'images/antenna.png',
@@ -12,16 +22,9 @@ const g = ga(
 //Start the Ga engine.
 g.start();
 g.scaleToWindow();
-window.addEventListener("resize", function(event){ 
-  g.scaleToWindow();
+window.addEventListener("resize", function (event) {
+    g.scaleToWindow();
 });
-
-var signals;
-var devices;
-var message;
-var gameScene;
-var gameOverScene;
-
 
 function makeDevices(numberOfDevices) {
     const screenDuration = 3000;
@@ -30,19 +33,19 @@ function makeDevices(numberOfDevices) {
     for (var i = 0; i < numberOfDevices; i++) {
         //var color = `rgb(${g.randomInt(0, 255)}, ${g.randomInt(0, 255)}, ${g.randomInt(0, 255)})`;
         var deviceFrames = [
-            'images/nokia-3210.png', 
+            'images/nokia-3210.png',
             'images/shield.png'
-          ];
+        ];
         var device = g.sprite(deviceFrames);
         device.states = {
             normal: 0,
             shielded: 1
-          };
+        };
         device.radius = g.randomInt(g.canvas.width / 4, (g.canvas.width - device.width) / 2);
         device.speed = g.randomFloat(0.001, 0.05) / device.radius * 70;
-        device.angle = 0;
+        device.angle = g.randomInt(0, 2 * Math.PI);
         device.interactive = true;
-        device.press = function() {
+        device.press = function () {
             this.show(this.states.shielded);
             this.shielded = true;
             setTimeout(() => {
@@ -93,29 +96,27 @@ function setup() {
     // gameScene.addChild(background);
 
     //The antenna
-    var antenna = g.sprite('images/antenna.png');
+    antenna = g.sprite('images/antenna.png');
     g.stage.putCenter(antenna, 0, 0);
-    gameScene.addChild(antenna);
-
+    
     devices = makeDevices(6);
-    signals = makeSignals(5, 2);
+    setTimeout(function() {
+        signals = makeSignals(5, 2);
+    }, 1000);
+    
+    scoreDisplay = g.text("score:" + score, "20px impact", "black", 400, 10);
+    gameScene.add(antenna, scoreDisplay);
 
     //Add some text for the game over message
-    message = g.text("Game Over!", "64px Futura", "black", 20, 20);
-    message.x = 120;
-    message.y = g.canvas.height / 2 - 64;
-  
-    var replay = g.text("replay", "32px Futura", "black", 20, 20);
-    replay.x = 220;
-    replay.y = g.canvas.height / 2 + 64;
-    var replayButton = g.rectangle(100, 50, "green");
-    replayButton.x = replay.x - 10;
-    replayButton.y = replay.y - 10;
+    message = g.text("Game Over!", "64px impact", "black", 120, g.canvas.height / 2 - 64);
+    totalScore = g.text("", "25px impact", "black", 180, g.canvas.height / 2 + 25);
+    var replay = g.text("replay", "32px impact", "black", 220, g.canvas.height / 2 + 64);
+    var replayButton = g.rectangle(95, 50, "green", "", "", replay.x - 5, replay.y - 5);
     replayButton.interactive = true;
     replayButton.release = restart;
 
     //Create a `gameOverScene` group and add the message sprite to it
-    gameOverScene = g.group(message, replayButton, replay);
+    gameOverScene = g.group(message, totalScore, replayButton, replay);
 
     //Make the `gameOverScene` invisible for now
     gameOverScene.visible = false;
@@ -129,9 +130,11 @@ function play() {
         device.x = (g.canvas.width - device.width) / 2 + Math.cos(device.angle) * device.radius;
         device.y = (g.canvas.height - device.height) / 2 + Math.sin(device.angle) * device.radius;
         device.angle += device.speed;
+        scoreDisplay.content = "score: " + ++score;
 
         if (!device.shielded && signals.some((signal) => g.hitTestRectangle(device, signal))) {
             device.alpha = 0;
+            score -= 100;
             devices = devices.filter((d) => d != device);
         }
     });
@@ -149,11 +152,11 @@ function play() {
 
     if (devices.length < 2) {
         g.state = end;
-        message.content = "Game over!";
-      }
+    }
 }
 
 function end() {
+    totalScore.content = "total score: " + score;
     gameScene.visible = false;
     gameOverScene.visible = true;
 }
@@ -164,6 +167,7 @@ function restart() {
     g.remove(devices);
     g.remove(signals);
     g.remove(antenna);
+    g.remove(scoreDisplay);
 
     setup();
 }
