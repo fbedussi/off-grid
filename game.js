@@ -7,6 +7,7 @@ var gameOverScene;
 var score = 0;
 var scoreDisplay;
 var totalScore;
+var signalSpeed = 2;
 
 var g = ga(
     512, 512, setup,
@@ -27,7 +28,9 @@ window.addEventListener("resize", function (event) {
 });
 
 function makeDevices(numberOfDevices) {
-    const screenDuration = 3000;
+    var screenDuration = 4000;
+    var screenAlertStart = 2000;
+    var screenAlertFrequency = 200;
     var devices = [];
 
     for (var i = 0; i < numberOfDevices; i++) {
@@ -46,9 +49,20 @@ function makeDevices(numberOfDevices) {
         device.angle = g.randomInt(0, 2 * Math.PI);
         device.interactive = true;
         device.press = function () {
+            clearInterval(this.screenAlertInterval);
+            clearTimeout(this.endScreenTimeout);
+            clearTimeout(this.screenAlertStart);
             this.show(this.states.shielded);
             this.shielded = true;
-            setTimeout(() => {
+            this.screenAlertStart = setTimeout(() => {
+                let status = 1;
+                this.screenAlertInterval = setInterval(() => {
+                    status = status ? 0 : 1;
+                    this.show(status);
+                }, screenAlertFrequency);
+            }, screenAlertStart);
+            this.endScreenTimeout = setTimeout(() => {
+                clearInterval(this.screenAlertInterval);
                 this.show(this.states.normal);
                 this.shielded = false;
             }, screenDuration);
@@ -67,23 +81,33 @@ function getDirection() {
     return g.randomFloat(-1, 1);
 }
 
+function makeSignal(speed) {
+    var signal = g.sprite('images/signal.png');
+
+    g.stage.putCenter(signal, 0, 0);
+    signal.speed = speed;
+    signal.vy = signal.speed * getDirection();
+    signal.vx = signal.speed * getDirection();
+    setInterval(() => {
+        if (signal.scaleX === 1) {
+            signal.scaleX = 0.5;
+            signal.scaleY = 0.5;
+        } else {
+            signal.scaleX = 1;
+            signal.scaleY = 1;
+        }
+    }, 100)
+
+    signals.push(signal);
+
+    gameScene.addChild(signal);
+}
+
 function makeSignals(numberOfSignals, speed) {
-    var signals = [];
-
+    signals = [];
     for (var i = 0; i < numberOfSignals; i++) {
-        var signal = g.sprite('images/signal.png');
-
-        g.stage.putCenter(signal, 0, 0);
-        signal.speed = speed;
-        signal.vy = signal.speed * getDirection();
-        signal.vx = signal.speed * getDirection();
-
-        signals.push(signal);
-
-        gameScene.addChild(signal);
+        makeSignal(speed);
     }
-
-    return signals;
 }
 
 function setup() {
@@ -99,9 +123,9 @@ function setup() {
     antenna = g.sprite('images/antenna.png');
     g.stage.putCenter(antenna, 0, 0);
     
-    devices = makeDevices(6);
+    devices = makeDevices(7);
     setTimeout(function() {
-        signals = makeSignals(5, 2);
+        makeSignals(5, signalSpeed);
     }, 1000);
     
     scoreDisplay = g.text("score:" + score, "20px impact", "black", 400, 10);
@@ -109,7 +133,7 @@ function setup() {
 
     //Add some text for the game over message
     message = g.text("Game Over!", "64px impact", "black", 120, g.canvas.height / 2 - 64);
-    totalScore = g.text("", "25px impact", "black", 180, g.canvas.height / 2 + 25);
+    totalScore = g.text("", "25px impact", "black", 180, g.canvas.height / 2 + 20);
     var replay = g.text("replay", "32px impact", "black", 220, g.canvas.height / 2 + 64);
     var replayButton = g.rectangle(95, 50, "green", "", "", replay.x - 5, replay.y - 5);
     replayButton.interactive = true;
@@ -133,8 +157,10 @@ function play() {
         scoreDisplay.content = "score: " + ++score;
 
         if (!device.shielded && signals.some((signal) => g.hitTestRectangle(device, signal))) {
+            device.shielded = false;
             device.alpha = 0;
             score -= 100;
+            makeSignal(signalSpeed);
             devices = devices.filter((d) => d != device);
         }
     });
@@ -150,7 +176,7 @@ function play() {
         }
     });
 
-    if (devices.length < 2) {
+    if (devices.length < 3) {
         g.state = end;
     }
 }
@@ -168,6 +194,5 @@ function restart() {
     g.remove(signals);
     g.remove(antenna);
     g.remove(scoreDisplay);
-
     setup();
 }
