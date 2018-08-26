@@ -32,6 +32,9 @@ function makeDevices(numberOfDevices) {
     var screenAlertStart = 2000;
     var screenAlertFrequency = 200;
     var devices = [];
+    var radiusExternalLimit = 10;
+    var radiusInternalLimit = (g.canvas.width / 2) - 30; 
+    var radiusInterval = (radiusInternalLimit - radiusExternalLimit) / numberOfDevices;
 
     for (var i = 0; i < numberOfDevices; i++) {
         //var color = `rgb(${g.randomInt(0, 255)}, ${g.randomInt(0, 255)}, ${g.randomInt(0, 255)})`;
@@ -44,7 +47,7 @@ function makeDevices(numberOfDevices) {
             normal: 0,
             shielded: 1
         };
-        device.radius = g.randomInt(g.canvas.width / 4, (g.canvas.width - device.width) / 2);
+        device.radius = radiusInternalLimit - (radiusExternalLimit + (radiusInterval * i));
         device.speed = g.randomFloat(0.001, 0.05) / device.radius * 70;
         device.angle = g.randomInt(0, 2 * Math.PI);
         device.interactive = true;
