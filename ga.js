@@ -1937,7 +1937,7 @@ GA.create = function(width, height, setup, assetsToLoad, load) {
     var ctx = canvas.ctx;
 
     //Clear the canvas.
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    //ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     //Display the all the sprites.
     for (var i = 0; i < ga.stage.children.length; i++) {

@@ -35,7 +35,7 @@ function makeDevices(numberOfDevices) {
     var radiusExternalLimit = 10;
     var radiusInternalLimit = (g.canvas.width / 2) - 30; 
     var radiusInterval = (radiusInternalLimit - radiusExternalLimit) / numberOfDevices;
-
+    
     for (var i = 0; i < numberOfDevices; i++) {
         //var color = `rgb(${g.randomInt(0, 255)}, ${g.randomInt(0, 255)}, ${g.randomInt(0, 255)})`;
         var deviceFrames = [
@@ -113,16 +113,28 @@ function makeSignals(numberOfSignals, speed) {
     }
 }
 
+var ctx = g.canvas.getContext("2d", {alpha: false});       // context without alpha channel.
+var time;
+
+function noise(ctx) {
+    var imgd = ctx.createImageData(g.canvas.width, g.canvas.height);
+    var pix = imgd.data;
+  
+    for (var i = 0, n = pix.length; i < n; i += 3) {
+        pix[i] = pix[i+1] = pix[i+2] = 10 * Math.random() * time;
+        //pix[i+3] = 255; // 100% opaque
+    }
+  
+    ctx.putImageData(imgd, 0, 0);
+    time = (time + 1) % g.canvas.height;
+}
+
 function setup() {
-    g.canvas.style.border = "1px black solid";
     g.backgroundColor = "white";
+    time = 0;
 
     gameScene = g.group();
 
-    // var background = g.sprite('images/matrix.png');
-    // gameScene.addChild(background);
-
-    //The antenna
     antenna = g.sprite('images/antenna.png');
     g.stage.putCenter(antenna, 0, 0);
     
@@ -133,11 +145,11 @@ function setup() {
             clearInterval(signalCreationInterval);
         }
     }, 1000);
+
     
     scoreDisplay = g.text("score:" + score, "20px impact", "black", 400, 10);
     gameScene.add(antenna, scoreDisplay);
 
-    //Add some text for the game over message
     message = g.text("Game Over!", "64px impact", "black", 120, g.canvas.height / 2 - 64);
     totalScore = g.text("", "25px impact", "black", 180, g.canvas.height / 2 + 20);
     var replay = g.text("replay", "32px impact", "black", 220, g.canvas.height / 2 + 64);
@@ -145,17 +157,16 @@ function setup() {
     replayButton.interactive = true;
     replayButton.release = restart;
 
-    //Create a `gameOverScene` group and add the message sprite to it
     gameOverScene = g.group(message, totalScore, replayButton, replay);
 
-    //Make the `gameOverScene` invisible for now
     gameOverScene.visible = false;
 
-    //set the game state to `play`
     g.state = play;
 }
 
 function play() {
+    noise(ctx);
+
     devices.forEach(function (device) {
         device.x = (g.canvas.width - device.width) / 2 + Math.cos(device.angle) * device.radius;
         device.y = (g.canvas.height - device.height) / 2 + Math.sin(device.angle) * device.radius;
