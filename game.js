@@ -127,8 +127,11 @@ function setup() {
     g.stage.putCenter(antenna, 0, 0);
     
     devices = makeDevices(7);
-    setTimeout(function() {
-        makeSignals(5, signalSpeed);
+    var signalCreationInterval = setInterval(function() {
+        makeSignal(signalSpeed);
+        if (signals.length > 4) {
+            clearInterval(signalCreationInterval);
+        }
     }, 1000);
     
     scoreDisplay = g.text("score:" + score, "20px impact", "black", 400, 10);
